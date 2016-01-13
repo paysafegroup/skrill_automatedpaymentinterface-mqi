@@ -1,0 +1,920 @@
+FORMAT: 1A
+HOST: https://www.skrill.com/app
+
+# Automated Payment API and MQI (Draft)
+
+The Automated Payment API (referred to as the API) and Merchant Query Interface (MQI) provide an alternative means of connecting to the Skrill Payment Gateway, and can be used to automate transaction requests such as refunds, payments and queries.
+
+API / MQI functions are accessed by sending HTTPS POST / GET requests to the relevant Skrill URL. All endpoints accept GET / POST.
+
+#### Note
+* POST is preferred for security reasons.
+* Do not mix GET and POST calls. Choose your preferred method and use that for all Skrill MQI / API calls.
+* POST parameters are encoded using Content-Type: application/x‐www‐form‐urlencoded  
+
+**MQI Functions**
+
+* Repost transaction status (only payment transactions? check?)
+* View transaction status (only payment transactions? check?)
+* View account history
+* Cancel a recurring payment
+* View the status of a recurring payment
+* Extend the end date of a recurring payment
+* Cancel a 1-Tap payment
+* View the status of a 1-Tap payment
+
+**API Functions** 
+* Refund Quick Checkout / Wallet Checkout / 1-Tap payments.
+* Transfer Money to another Skrill Account (send money).
+* Taking subsequent 1-Tap payments (after the initial setup payment)
+
+## Setup the MQI and / or API
+By default, both the Automated Payments Interface and Merchant Query Interface are disabled. To use either service you must enable them and setup and MQI / API password. The process is as follows:
+
+  1. Enable the MQI and or API services
+  1. Configure the IP addresses / IP ranges from which MQI and / or API requests can be sent
+  1. Setup an MQI / API password
+These steps are described in detail below.
+
+## Enable the MQI and / or API as follows:
+ 1. Log in to your Skrill account [here](https://account.skrill.com/login)
+ 1. Go to **Settings > Developer Settings**
+ 1. Check the **Enable service** checkbox next to the services you want to enable
+ 1. Specify at least one IP address from which requests will be made. *All requests from other IP
+addresses are denied*. Access can be granted to:
+* A single IP address (e.g. 192.168.0.2)
+* Multiple IP addresses, separated by space (e.g. 192.168.0.2 10.0.0.2)
+* A subnet in CIDR notation (e.g. 192.168.0.0/24)
+Enter a list of IPs, a single IP address, or an IP range in the text fields in the
+corresponding sections (API or MQI, or both, as appropriate).
+ 1. To apply your changes, click **Save**.
+
+## Setup an API / MQI Password
+
+You must use a separate password from your merchant Wallet account for making API or MQI requests. This ensures that the password
+you use to access your Wallet account can be changed without affecting access to the API or MQI.
+
+To enable a separate API/MQI password:
+ 1. In the **Settings > Developer Settings** area, check the **Enable separate API/MQI password** checkbox.
+ 1. Enter a new password and confirm it in the **Re-type password** box below.
+>*The password must be at least 8 characters long and must contain at least one alphabetic and
+one non‐alphabetic character*
+ 1. Click **Save**
+ 
+##Secret Word
+The secret word is used for the following tasks:
+* To construct the *msid* digital signature parameter. This parameter is sent to the *return_url* if the secure *return_url* option is enabled for your merchant account. This signature is used to verify the authenticity of the information sent to the *return_url* once payment is complete.
+* To create the digital signature parameters used to verify the authenticity of the payment status information that Skrill sends to the *status_url* .
+* For the email check tool to carry out anti‐fraud checks on email addresses.
+
+To setup a secret word:
+ 1. Go to the **Settings > Developer Settings** section of your Skrill account.
+ 1. In the **Secret Word** field, enter your secret word. The following restrictions apply:
+   * All characters must be in lowercase
+   * The length should not exceed 10 characters
+   * Special character are not permitted (e.g. @,%,$, etc.)
+If you insert any uppercase symbols, they will automatically be converted to lowercase
+ 1. To apply your changes, click **Save**
+ 
+## Group API
+
+You can make mass payments using the Skrill Automated Payments Interface (API). This offers the
+same functionality that is available on My Account, but allows you to automate the sending of
+payment details from your servers to Skrill using an HTTPs request. Automated payment transfers are implemented by sending an HTTPs GET request to the [https://www.skrill.com/app/pay.pl](https://www.skrill.com/app/pay.pl)
+
+The process consists of two steps:
+* Sending a transfer prepare request
+* Executing the transfer
+
+After each step Skrill returns a XML response that contains the result of the performed action. See the
+example in the [response section] (#prepare transfer response)
+
+## Prepare Transfer [/pay.pl/{?action,email,password,amount,currency,bnf_email,subject,note}]
+
+| Field      | Description    |Required? | Example Value |
+|------------|----------------|----------|---------------|
+| `action`     | The required action in the first step, this is **prepare**|Yes|action-transfer|
+| `email`   | The email address of your merchant account|Yes|5e281d1376d92ba789ca7f0583e045d4| 
+| `password`   | Lowercase MD5 of your API / MQI password|Yes|5e281d1376d92ba789ca7f0583e045d4|
+| `amount`   | Amount to transfer|Yes|10.95|
+| `currency`   | Currency of the amount|Yes|EUR| 
+| `bnf_email`   | Recipient's email address|Yes|customer@host.com| 
+| `subject`   | Subject of the notification email | Yes | Your order is ready |
+| `note`   | Comment to be included in the notification email.| Yes |Details are available on our website. |
+| `frn_trn_id`   | Your reference ID (must be unique if submitted).|No |A1234|
+
+### Prepare Response
+<a name="prepare transfer response">
+Skrill returns an XML response to your request, which contains a 'response' tag with one of the
+following elements:
+* **sid** element - returned if the authorisation and payment preparation is successful. The SID (Session Identifier) must be submitted in your transfer execution request
+* **error** element – included if an error occurs. It includes an *error_msg* tag, which contains the error message description.
+
+> *We recommend you open a test account to test your mass payment transaction. You can open a new Skrill digital wallet account online and send a request to the <a href="mailto:merchantservices@skrill.com">Merchant Services</a> team to enable this as a test account. Test accounts operate in the live environment, but funds cannot be sent from a test account to a live account*
+
+
+
+#### Successful prepare request
+
+##### Request
+```http
+GET https://www.skrill.com/app/pay.pl?action=prepare&email=merchant@host.com&password=6b4c1ba48880bcd3341dbaeb68b2647f&amount=1.2&currency=EUR&bnf_email=beneficiary@domain.com&subject=some_subject&note=some_note&frn_trn_id=111
+```
+
+<a name="execute transfer response">
+
+##### Response 
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<response><sid>5e281d1376d92ba789ca7f0583e045d4</sid></response>
+```
+
+#### Failed prepare request
+
+##### Request
+```http
+GET https://www.skrill.com/app/pay.pl?action=prepare&email=merchant@host.com&password=6b4c1ba48880bcd3341dbaeb68b2647f&currency=EUR&bnf_email=beneficiary@domain.com&subject=some_subject&note=some_note&frn_trn_id=111
+```
+
+###### Response
+```xml
+<?xml version="1.0" encoding="UTF-8"?> <response> <error>
+<error_msg>MISSING_AMOUNT</error_msg> </error> </response>
+```
+
+
+###  Sending a transfer prepare request [GET]
+
++ Parameters
+    + action (required,string, `prepare`)
+    + email:`sample.merchant@sun-fish.com` (string) - email address of the merchant account
+    + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+    + amount:5 (required,number) - amount to send in the currency defined by the currency parameter
+    + currency:EUR (string) - 3 digit currency code
+    + bnf_email:`sample.merchant@sun-fish.com`(string) - email address of the recipient account
+    + subject:`send money subject`
+    + note:`send money note`
+
++ Response 200 (application/xml)
+ 
+        <?xml version="1.0" encoding="UTF-8"?> 
+            <response>
+                <sid>5e281d1376d92ba789ca7f0583e045d4</sid>
+            </response>
+            
++ Response 200 (application/xml)
+ 
+        <?xml version="1.0" encoding="UTF-8"?>
+        <response>
+            <error>
+                <error_msg>MISSING_AMOUNT</error_msg>
+            </error>
+        </response>
+
+
+## Execute Transfer [/pay.pl/{?action,sid}]
+Your web servers should include the SID information provided in the XML response from Skrill in the transfer execute request, as described below.
+
+| Field      | Description    |Required? | Example Value |
+|------------|----------------|----------|---------------|
+| `action`     | The required action. In the second step this is **transfer**|Yes|transfer|
+| `sid`   |Session identifier returned in response to the prepare request|Yes|5e281d1376d92ba789ca7f0583e045d4|                     
+
+
+### Execute Transfer Response
+Skrill returns an XML response to your request, which contains a 'response' tag with one of the
+following elements:
+* **transaction** element - returned if the payment is successful; the response includes the fields listed below.
+* **error** element – included if an error occurs. It includes an *error_msg* tag, which contains the error message description.
+
+| Field      | Description                                                                                                                                          |
+|------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `amount`     | Amount paid in the currency of your Skrill account.                                                                                                  |
+| `currency`   | Currency of your Skrill account.                                                                                                                     |
+| `id`         | Transaction ID.                                                                                                                                      |
+| `status`     | Numeric value of the transaction status. 1 - scheduled (if beneficiary is not yet registered at Skrill). 2 - processed (if beneficiary is registered) |
+| `status_msg` | Text value of the transaction status.                                                                                                                |
+
+
+### Reposting the HTTPs transfer request
+If there is a communication error during the transfer, you must resend the transfer request within 15
+minutes of the previous request (since transfer request sessions expire after 15 minutes).
+> *The Skrill server executes only one transaction per session, so the request will not be
+duplicated.*
+
+There are three possible outcomes to reposting the HTTPs request, depending on the transfer
+execution status:
+* If a transaction has already been executed within this session, then you will need to generate a new session ID, since only one transaction is allowed per session.
+* If there is a transaction in the process of execution, which is already associated with this session, then Skrill responds with status EXECUTION_PENDING. In this case you do not need to generate a new session ID and can wait for the response.
+* If the transfer request is new (i.e. not executed or pending) then it will either succeed or fail and the result will be a response as described in the
+
+### Sending a transfer execute request [GET]
+
++ Parameters
+      + action (required,string, `transfer`) - The required action. In the second step this is **transfer**
+      + sid:8b2468284ce4a551904df9f50908bfcd (required,number) - Session identifier returned in response to the prepare request
+    
++ Response 200 (application/xml)
+ 
+        <?xml version="1.0" encoding="UTF-8"?>
+        <response>
+            <transaction>
+                <amount>5</amount>
+                <currency>EUR</currency>
+                <id>497029</id>
+                <status>2</status>
+                <status_msg>processed</status_msg>
+            </transaction>
+        </response>
+
+
+## Group MQI
+The Merchant Query Interface allows you to query the Skrill database for the current status of your
+transactions as well as perform actions connected to Skrill 1 tap and recurring payments. You can
+access the MQI by posting a query to: [https://www.skrill.com/app/query.pl](https://www.skrill.com/app/query.pl). The MQI requires three general parameters to be included in your query (email, password and
+action) and a number of additional parameters specific to the requested action. The three general parameters are described below:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| `email`     | The email address of your Skrill account         | Yes       | info@merchant.com                 |
+| `password`   | The lowercase hex MD5 of your API/ MQI password. | Yes       | 9f535b6ae672f627e4e5f7 9f2b7c63fe |
+| `action`     | The required action                              | Yes       | repost                            |
+
+The following MQI actions are supported:
+* View transaction status
+* Repost transaction status
+* View account history
+* Cancel a recurring payment
+* View the status of a recurring payment
+* Extend the end date of a recurring payment
+* Cancel a Skrill 1-Tap payment
+* View the status of a Skrill 1-Tap payment
+
+Each of these is described in more detail below:
+
+## View transaction status [/query.pl/{?action,email,password,trn_id,mb_trn_id}]
+Query parameter: *action=status_trn*
+
+This action gives a direct response with the status of the payment. It includes the same details as in
+the *repost* action, but sends this a direct response to the request rather than to a status url.
+The following additional parameters are required:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| `trn_id`     |  Your transaction ID.         | Yes/No       | 500123                 |
+| `mb_trn_id`   |  Skrill transaction ID. | Yes/No       | 4585262 |
+
+#### Notes
+* Either *trn_id* or *mb_trn_id* must be supplied and if both are given, *trn_id* will be used
+* If a transaction with the given ID is found, the second line of the response will be a query string that contains the transaction details. This string is encoded using the ‘application/x‐www‐form‐urlencoded’ format.
+
+###  View transaction status [POST]
+
++ Parameters
+      + action (required,string, `status_trn`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (optional,string) - Your transaction ID
+      + mb_trn_id:1663226435 (optional,string) - The Skrill transaction ID
+      
+
+ 
++ Response 200 (application/x‐www‐form‐urlencoded)
+
+        200\t\tOK\nmerchant_id=69453507&transaction_id=1664543878&mb_transaction_id=1664543878&mb_amount=6.457274&mb_currency=EUR&status=2&md5sig=CBFE7C3CDA872012017B2A6CAAF63BDB&amount=5&rec_payment_type=on-demand&rec_payment_id=1664543880&pay_from_email=techpubs%40skrill.com&pay_to_email=sample.merchant%40sun-fish.com&currency=GBP\n"
+
+## Repost transaction status [/query.pl/{?action,email,password,trn_id,mb_trn_id,status_url}]
+Query parameter: *action=repost*
+
+This action allows you to repost transaction status information to the status_url page specified in the initial payment.
+If you want to send the transaction status information to a different status url then you can supply this url as an optional parameter.
+
+This request accepts the following additional parameters:
+
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|                       |
+| `trn_id`     | Your transaction ID | Yes / No | |
+| `mb_trn_id`  | The Skrill transaction ID | Yes / No | |
+| `status_url` | To repost the transaction status to a different status url than that supplied with the inital payment. The URL must begin with https:// | No | https://www.merchant.com/statusupdate.cgi  |
+
+###  Repost transaction status [POST]
+
++ Parameters
+      + action (required,string, `status_trn`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (optional,string) - Your transaction ID
+      + mb_trn_id (optional,string) - The Skrill transaction ID 
+      + status_url (optional,string) - To repost the transaction status to a different status url.
+      
+
++ Response 200 (application/x‐www‐form‐urlencoded)
+
+        200\t\tOK\n\n
+        
+## View Account History [/query.pl/{?action,email,password,start_date,end_date}]
+Query parameter: *action=history*
+
+You can use the ‘history’ action to request a list of all your transactions for a specified period. The following additional parameters are required:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| `start_date`     |  The start date in ***DD-MM-YYYY*** format| Yes      | 29‐05‐2012                 |
+| `end_date`   |  The end date in ***DD-MM-YYYY*** format| No       |  30‐06‐2013 |
+
+#### Notes
+* On success, Skrill returns the complete account history for the specified period in CSV (comma separated values) format.
+* If the *end_date* parameter is not specified, Skrill uses today's date.
+
+###  View Account History [POST]
+
++ Parameters
+      + action (required,string, `history`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + start_date:`07-01-2015` (required,string) - The start date in DD-MM-YYYY format
+      + end_date (optional,string) - The end date in DD-MM-YYYY format
+
++ Response 200 (application/vnd.ms-excel;charset=UTF-8)
+
+        ?\"ID\",\"Time (CET)\",\"Type\",\"Transaction Details\",\"[-] EUR\",\"[+] EUR\",\"Status\",\"balance\",\"Reference\",\"Amount Sent\",\"Currency sent\",\"More information\",\"ID ofthe corresponding Skrill transaction\"
+        \r\n\"1664246159\",\"07 Jan 16 17:00\",\"Send Money\",\"to sample.merchant@sun-fish.com\",\"5\",\"\",\"processed\",\"1.576257\",\"\",\"5\",\"EUR\",\"send money subject\",\"1664246146\"
+        \r\n\"1664246160\",\"07 Jan 16 17:00\",\"Send Money\",\"Fee\",\".05\",\"\",\"processed\",\"1.526257\",\"\",\"\",\"\",\"\",\"1664246147\"
+        \r\n\"1664246163\",\"07 Jan 16 17:00\",\"Receive Money\",\"from sample.merchant@sun-fish.com\",\"\",\"5\",\"processed\",\"6.526257\",\"\",\"5\",\"EUR\",\"send money subject\",\"1664246148\"
+        \r\n\"1664388272\",\"07 Jan 16 19:38\",\"Receive Money\",\"from techpubs@skrill.com\",\"\",\"6.485014\",\"processed\",\"13.011271\",\"\",\"5\",\"GBP\",\"Product ID: 4509334\",\"1664388252\"
+        \r\n\"1664388273\",\"07 Jan 16 19:38\",\"Receive Money\",\"Fee\",\".226975\",\"\",\"processed\",\"12.784296\",\"\",\"\",\"\",\"\",\"1664388252\"\r\n"
+        
+
+## View Recurring Payment Status [/query.pl/{?action,email,password,trn_id}]
+Query parameter: *action=status_rec*
+
+This action allows you to check the status of a recurring payment. The following additional parameters are required:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| trn_id | The transaction ID of the recurring payment (The transaction_id value of the intial setup recurring payment as returned to your status_url page) | Yes | 500123 |
+
+If a transaction with the given ID is found, the response contains the following 
+* Status: 0 - active, -1 - cancelled, -2 - failed, 1 - finished
+* Next payment date in DD-MM-YYYY format. This parameter is only returned if the status is active or failed
+* End date in DD-MM-YYYY format. This parameter is returned only if the status is active or failed
+
++ Parameters
+      + action (required,string, `status_rec`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (required,string) - Your transaction ID for the initial setup recurring payment.
+      
+###  View Recurring Payment Status [POST]
+
++ Response 200 (text/html)
+
+        200\t\tOK\nStatus: 0 Next payment date: 09-01-2016, End date: 10-01-2016\n
+        
+###  Cancel a 1-Tap Payment [POST]
+
+Query parameter: *action=cancel_od*
+
+This action allows you to cancel a Skrill 1‐Tap payment. The following additional parameters are required:
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| trn_id | The transaction_id value of the intial 1-Tap setup payment as returned to your status_url page | Yes | 500123 |
+
+For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
+
+
++ Parameters
+      + action (required,string, `status_rec`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (required,string) - The mb_transaction_id value of the intial 1-Tap setup payment as returned to your status_url page
+
++ Response 200 (text/html)
+
+        200\t\tOK\n\n
+        
+## Cancel Recurring Payment [/query.pl]
+Query parameter: *action=cancel_rec*
+
+This action allows you to cancel a recurring payment. The following additional parameters are required:
+
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| trn_id | The transaction ID of the recurring payment (The transaction_id value of the intial setup recurring payment as returned to your status_url page) | Yes | 500123 |
+
+For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
+
+###  Cancel Recurring Payment [POST]
+
++ Attributes
+      + action:`cancel_rec` (required,string)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account.
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (required,string) - Your transaction ID for the initial setup recurring payment.
+      
++ Response 200 (text/html)
+
+        200\t\tOK\n\n
+
+## Extend the end date of a recurring payment [/query.pl/{?action,email,password,trn_id,rec_end_date}]
+Query parameter: *action=extend_rec*
+
+This action allows you to extend the end date of a recurring payment. The following additional parameters are required:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| trn_id | The transaction ID of the recurring payment (The transaction_id value of the intial setup recurring payment as returned to your status_url page) | Yes | 500123 |
+| rec_end_date | The recurrent end date in DD-MM-YYYY format | Yes | 30-06-2013 |
+
+For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
+
+###  Extend the End Date of a Recurring Payment [POST]
+
++ Parameters
+      + action (required,string, `status_rec`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (required,string) - Your transaction ID for the initial recurring payment.
+      + rec_end_date (required,string,`30-06-2013`) - The recurring payment end date in DD-MM-YYYY format
+
++ Response 200 (text/html)
+
+        200\t\tOK\n\n
+
+
+
+## View Skrill 1-Tap Payment Status [/query.pl/{?action,email,password,trn_id}]
+Query parameter: *action=status_od*
+
+This action allows you to check the status of a Skrill 1‐Tap payment. The following parameter is required:
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| trn_id | The transaction_id value of the intial 1-Tap setup payment as returned to your status_url page | Yes | 500123 |
+
+If a transaction with the given ID is found, the response will contain the following parameters:
+* Status: 0 - active, -1 - cancelled
+* Last execution date in DD-MM-YYYY format (Note if 1-Tap is setup but no subsequent payments have been taken then it will return -- for the execution date)
+
+###  View a 1-Tap Payment [GET]
+
++ Parameters
+      + action (required,string, `status_rec`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (string) - The lowercase hex MD5 of your API / MQI password.
+      + trn_id (required,string) - The transaction id value of the intial 1 Tap setup payment as returned to your status_url page
+
++ Response 200 (text/html)
+
+        200\t\tOK\nStatus: -1  Last execution date: 08-01-2016\n
+        
++ Response 200 (text/html)
+
+        200\t\tOK\nStatus: 0  Last execution date: --\n
+
+## Group MQI Error Messages        
+| Error | Description                 | Reason for error        |
+|-------|-----------------------------|-------------------------|
+| 401   | Unauthorised / Cannot login | Authentication is required and has failed or has not yet been provided. |
+| 402   | Payment Required            | Reserved for future use |
+| 403   | Forbidden                   | The request was a valid request, but the server is refusing to respond to it. For example, the provided credentials were successfully authenticated but do not grant the client permission to access the resource                        |
+| 404   | Not Found                   | The requested resource could not be found |
+| 405   | Method not Allowed          | A request was made of a resource using a request method not supported. For example, using GET on a form which requires data to be presented via POST |
+
+## Group Refund
+You can use the Automated Payments Interface to make automated partial or full refunds to customers, up to the amount of the original payment.
+You must send your refund request to the following URL:
+https://www.skrill.com/app/refund.pl
+
+The refund is made up of two steps:
+* Preparation of the refund
+* Execution of the refund
+
+These steps are described in detail below.
+
+## Prepare Refund transaction [/refund.pl]
+Query parameter: *action=prepare*
+
+The following parameters must be included in the refund prepare request:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| `action`     | The required action                              | Yes       | prepare |
+| `email`     | The email address of your Skrill account         | Yes       | info@merchant.com                 |
+| `password`   | The lowercase hex MD5 of your API/ MQI password. | Yes       | 9f535b6ae672f627e4e5f79f2b7c63fe |
+| `transaction_id`     |  Your transaction ID to be refunded. | Yes / No| 4585262|
+|`mb_transaction_id`     |   The Skrill transaction ID to be refunded | Yes / No| 500123 |
+| `amount`| Amount to refund in the currency used by the merchant account. This field is ***only*** used for partial refunds. | No| 9.99 |
+| `refund_note`|   The Skrill transaction ID to be refunded | No| Product no longer in stock |
+| `merchant_fields`|   A comma‐separated list of field names that are passed back to your server when the refund payment is confirmed (maximum 5 fields). | No| Field1,Field2 |
+| `Field1` | An additional field you can include containing your own unique parameters | No | Value1 |
+| `Field2` | An additional field you can include containing your own unique parameters | No | Value2 |
+| `refund_status_url`| URL or email address to which status updates should be sent. The URL must begin with https:// **See note below detailing supported ports**| No| https://www.merchant.com/refund_update.cgi|
+
+#### Notes
+* You must submit either *transaction_id* or *mb_transaction_id*.
+* If no *amount* value is submitted, the refund will be for the full amount of the original transaction.
+* If a *refund_note* value is submitted, it is shown in the body of the notification email sent to the customer.
+* The following ports can be used for the refund_status_url: 80, 81, 82, 83, 88, 90, 178, 419, 433, 443, 444, 448, 451, 666, 800, 888, 1025, 1430, 1680, 1888, 1916, 1985, 2006, 2221, 3000, 4111, 4121, 4423, 4440, 4441, 4442, 4443, 4450, 4451, 4455, 4567, 5443, 5507, 5653, 5654,5656, 5678, 6500, 7000, 7001, 7022,7102, 7777, 7878, 8000, 8001, 8002,8011, 8014, 8015, 8016, 8027, 8070,8080, 8081, 8082, 8085, 8086, 8088,8090, 8097, 8180, 8181, 8443, 8449,8680, 8843, 8888, 8989, 9006, 9088,9443, 9797, 10088, 10443, 12312,18049, 18079, 18080, 18090, 18443,20202, 20600, 20601, 20603, 20607,20611, 21301, 22240, 26004, 27040,28080, 30080, 37208, 37906, 40002,40005, 40080, 50001, 60080, 60443
+
+#### XML Server response
+The resulting XML contains a *response* tag with one of the following elements, depending on the success of the operation:
+* **sid** (session identifier) element - returned if the prepare request is successful. This must be submitted with the **refund** action in the next step.
+* **error** element - returned if an error occurs. Contains an *error_msg* tag with the error message.
+
+#### Successful Prepare Refund Example
+
+##### Request
+```http
+POST https://www.skrill.com/app/refund.pl
+
+action=prepare&email=info@merchant.com&password=9f535b6ae672f627e4a5f79f2
+b7c63fe&transaction_id=500123&amount=9.99&refund_note=example_note&refund_status_ur
+l=https://www.merchant.com/
+refund_update.cqi&merchant_fields=Field1,Field2&Field1=Value1&Field2=Value2
+```
+
+#### Response
+```xml
+<response><sid>d831e9072e8b89c57a3654ddf5fcb907</sid></response>
+```
+
+#### Unsuccessful Prepare Refund Example (Invalid merchant API/MQI password)
+
+##### Request
+```http
+POST https://www.skrill.com/app/refund.pl
+
+action=prepare&email=info@merchant.com&password=9f535b6ae672f627e4a5f79f2
+b7c64fe&amount=9.99&refund_note=example_note&refund_status_url=https://
+www.merchant.com/
+refund_update.cqi&merchant_fields=Field1,Field2&Field1=Value1&Field2=Value2
+```
+
+#### Response
+```xml
+<response><error><error_msg>CANNOT_LOGIN</error_msg></error></response>
+```
+
+#### Error Message
+See the table below for details of error messages:
+
+| Error | Description                 |
+|-------|-----------------------------| 
+| INVALID_OR_MISSING_ACTION   | The ‘action’ parameter is not supplied in the query         | 
+| REFUND_DENIED   |  Refund feature is not activated.                   | 
+| LOGIN_INVALID| Missing ‘email’ or ‘password’ parameters. |
+| INVALID_EMAIL| An Invalid ‘email’ parameter is supplied.|
+| CANNOT_LOGIN | Invalid combination of email and password is supplied |
+
+
+### Prepare Refund [POST]
+
++ Attributes
+      + action:`prepare` (required,string)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password:fb0dc09bd0989fe975afd3e4ddabb926 (required,string) - The lowercase hex MD5 of your API / MQI password.
+      + transaction_id (optional,string) - Your transaction ID to be refunded
+      + mb_transaction_id:`1664388252` (optional,string) - The Skrill transaction ID to be refunded
+      + amount (optional,number) - Amount to refund in the currency used by the merchant account. This field is only used for partial refunds
+      + refund_note:`Product no longer in stock` (optional,string) - Refund note sent to the customer. This note forms part of the email sent to the customer to inform them that they have received a refund.
+      + merchant_fields:`Field1,Field2` (optional,string) - A comma‐separated list of field names that are passed back to your server when the refund payment is confirmed (maximum 5 fields).
+
++ Request (application/x-www-form-urlencoded)
+
+        action=prepare&email=sample.merchant%40sun-fish.com&password=fb0dc09bd0989fe975afd3e4ddabb926&mb_transaction_id=1664388252
+
++ Response 200 (application/xml)
+
+        <response><sid>d831e9072e8b89c57a3654ddf5fcb907</sid></response>
+
++ Response 200 (application/xml)
+        
+        <response><error><error_msg>CANNOT_LOGIN</error_msg></error></response>
+
+## Execute Refund transaction [/refund.pl/{?action,sid}]
+Query parameter: *action=refund*
+
+Your web servers should include the SID information provided in the XML response from Skrill in the prepare refund request, as described below.
+
+| Field      | Description    |Required? | Example Value |
+|------------|----------------|----------|---------------|
+| `action`     | The required action. In the second step this is **refund**|Yes|refund|
+| `sid`   |Session identifier returned in response to the prepare request|Yes|5e281d1376d92ba789ca7f0583e045d4|
+
+
+The server returns XML containing a ‘response’ tag, which includes some of the following elements, depending on the success of the operation:
+
+| Field      | Description    | Example |
+|------------|----------------|---------|
+| mb_amount  | Amount refunded in the currency of your Skrill account. | 9.99 |
+| mb_currency | Currency of your Skrill account | EUR |
+| transaction_id | Your refund transaction ID as submitted in the reqest | 500123 |
+| mb_transaction_id | The Skrill transaction ID for the refund | 5585262 |
+| Field1 | The first additional field pre-defined in the *merchnant_field* parameter | Value1|
+| Field2 | The second additional field pre-defined in *merchant_field* parameter | Value2|
+| status | 2 - processed, 0 - pending, -2 - failed | 2 |
+| error | See the table below for a list of Refund errors | CC_REFUND_FAILED |
+
+
+| Error | Desciption |
+|-------|------------|
+|BALANCE_NOT_ENOUGH| Refund amount exceeds account balance|
+|CC_REFUND_FAILED| Refund to a credit / debit card failed|
+|RESERVE_EXCEEDED| Refund amount is blocked by rolling / fixed reserve |
+|GENERIC_ERROR| Other errors, different from those described above. Note this error code is also used if this transaction has already been refunded|
+
+
+#### Refund Execution Example
+
+##### Request
+```http
+POST
+https://www.skrill.com/app/refund.pl
+
+action=refund&sid=d831e9072e8b89c57a3654ddf5fcb907
+```
+
+#### Response
+```xml
+<response><mb_amount>2</mb_amount><mb_currency>EUR</mb_currency><mb_transaction_id>381526883</mb_transaction_id><Field1>Value1</Field1><Field2>Value2</Field2><status>2</status><transaction_id/></response>
+```
+
+#### Refund Status Report
+If a request for refund cannot be executed at the moment, Skrill sends a response with status ‘0’ (pending) in the prepare step. When Skrill receives an update on the status of the refund, a notification is sent to your refund_status_url page.
+
+If you would like to receive notification for every status of your refund request, contact the Merchant Services team.
+
+This status report contains the following fields:
+
+| Field      | Description    |Required? | Example Value |
+|------------|----------------|----------|---------------|
+| `transaction_id`     | Your transaction ID for the refund as submitted in the request.|Yes / No| 500123|
+| `mb_transaction_id`   | The Skrill transaction ID for the refund.|Yes| 5585262|
+| `status` | 2 - processed and -2 - failed | Yes | 5585262 |
+| `mb_amount` | Amount refunded in the currency of your Skrill account | Yes | 2 |
+| `mb_currency` | Currency of your Skrill account | Yes | 9.99 |
+| `md5sig` | Uppercase MD5 signature See MD5 signature below | Yes |  9F535B6AE672F627E4A5F79F2B7C63FE |
+| `sha2sig` |  Uppercase Sha2 signature. This is constructed in the same way as the MD5 signature, but with a different hashing algorithm. This parameter is not available by default. To enable this option, send a request to merchantservices@skrill.com | No | DBB7101322257A311F08D1C527053058FC7E464E30BCFB4613F09053C22DD1F8 |
+
+##### MD5 Signature
+The *md5sig* parameter consists of an MD5 sum on a string built by concatenating the following
+parameters and converting the result to uppercase:
+
+| Parameter  | Description    | Example Value |
+|------------|----------------|---------------|
+| merchant_id | Your Skrill merchant account user ID | 4637827 |
+| mb_transaction_id | The new Skrill transaction ID for the refund | 5585262 |
+| MD5 of the secret word | The uppercase MD5 value of the secret word submitted in the **Settings > Developer Settings** section of your Skrill account.| 327638C253A4637199CEBA6642371F20 |
+| mb_amount | Amount refunded in the currency of your account | 9.99|
+| mb_currency | Currency of your account. | EUR |
+| status | The status of the refund transaction | 2 |
+
+
+#### Example code
+Concated fields in Ruby code:
+```Ruby
+fields = [merchant_id, mb_transaction_id, Digest::MD5.hexdigest(secret).upcase,
+mb_amount, mb_currency, status].join
+md5sig == Digest::MD5.hexdigest(fields).upcase
+```
+
+Using the example values in the table above, the following MD5 code is returned:
+`CF9DCA614656D19772ECAB978A56866D`
+
+###  Execute Refund [POST]
+
++ Parameters
+      + action (required,string, `refund`)
+      + sid:`d831e9072e8b89c57a3654ddf5fcb907` (required,string) - email address of the merchant account
+
++ Response 200 (application/xml)
+
+        <?xml version="1.0" encoding="UTF-8"?>
+            <response>
+                <mb_amount>2</mb_amount>
+                <mb_currency>EUR</mb_currency>
+                <mb_transaction_id>381526883</mb_transaction_id>
+                <Field1>Value1</Field1>
+                <Field2>Value2</Field2>
+                <status>2</status>
+                <transaction_id/>
+            </response>
+            
+## Group 1-Tap
+Skrill 1-Tap is a single-click payment service which enables you to automatically debit transactions from your customer’s Skrill account without the customer having to log in to their account to authorise the request each time. 
+Customers are sent an email notification after each 1-Tap payment and they can view the status of all their Skrill 1-Tap payments in the History section of their Skrill Wallet account.
+1-Tap payment consists of two steps:
+ 1. Make an initial 1-Tap payment using the standard Wallet Checkout payment form.
+ 1. Make subsequent 1-Tap payments using the automated payment interface (API).
+
+You must send your subsequent request to the following URL:
+https://www.skrill.com/app/ondemand_request.pl.
+
+Each subsequent 1-Tap payment consist of two steps:
+* Sending a prepare 1-Tap payment request
+* Executing the 1-Tap payment
+
+## Prepare 1-Tap payment [/ondemand_request.pl/{?action,email.password,amount,currency,ondemand_note,frn_trn_id,rec_payment_id,merchant_fields,Field1,Field2}]
+Query parameter: *action=prepare*
+
+This action prepares the transaction to be executed later on with the request action. The following
+parameters are required:
+
+| Field Name | Description                                      | Required? | Example value                     |
+|------------|--------------------------------------------------|-----------|-----------------------------------|
+| `action`     | The required action                              | Yes       | prepare |
+| `email`     | The email address of your Skrill merchant account         | Yes       | info@merchant.com                 |
+| `password`   | The lowercase hex MD5 of your API/ MQI password. | Yes       | 9f535b6ae672f627e4e5f79f2b7c63fe |
+| `amount`| The subsequent payment amount. | Yes| 10.50 |
+| `currency`| 3-letter code of the currency of the maximum amount according to ISO 4217 | Yes| EUR |
+| `frn_trn_id`     | Your transaction ID, used for the payment. This is your own unique reference for this transaction | Yes| A205220|
+|`rec_payment_id`     |  Recurring payment ID as sent to your status_url page upon creating the Skrill 1-Tap payment. This should be the same as the original Skrill transaction ID returned to your systems with the original transaction | Yes| 200005 |
+| `ondemand_note`|   Text shown to the customer in the confirmation email as the reason for the Skrill 1-Tap payment. | No| Credit topped up |
+| `merchant_fields`|   A comma‐separated list of field names that are passed back to your server when the refund payment is confirmed (maximum 5 fields). | No| Field1,Field2 |
+| `Field1` | An additional field you can include containing your own unique parameters | No | Value1 |
+| `Field2` | An additional field you can include containing your own unique parameters | No | Value2 |
+
+#### Notes
+* Both *frn_trn_id* and *rec_payment_id* must be provided. You must use the *rec_payment_id* field to reference the original 1‐Tap transaction and provide a unique value for *frn_trn_id* as the reference for the current transaction.
+* If ondemand_note is not provided, the one that is submitted when creating the Skrill 1‐Tap payment will be used.
+* A session identifier (SID) parameter is returned upon success.
+* You can track the status of any 1‐Tap transaction and perform refunds using the unique *frn_trn_id* for that transaction.
+
+#### 1-Tap Prepare Example
+
+##### Request
+```http
+GET
+
+Finish Example!
+
+```
+
+#### Response
+```xml
+
+Finish Example !
+
+```
+
+###  Prepare 1-Tap Payment [GET]
+
++ Parameters
+      + action (required,string, `prepare`)
+      + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
+      + password (required,string,`9f535b6ae672f627e4a5f79f2b7c63fe`) - The lowercase hex MD5 of your API / MQI password.
+      + ondemand_note (optional,string,`credit topped up`)
+      + frn_trn_id (required,string,`500123`) - Your transaction ID, used for this payment. This is your own unique reference for this transaction
+      + rec_payment_id (optional,string,`4585262`) - Recurring payment ID (rec_payment_id) sent to your status_url page upon completing the inital Skrill 1‐Tap payment. This should be the same as the original Skrill transaction ID returned to your systems with the original transaction
+      + amount (required,number) - Amount to refund in the currency used by the merchant account.
+      + merchant_fields (optional,string,`Field1,Field2`) - A comma‐separated list of field names that are passed back to your server when the Skrill 1‐Tap payment is confirmed (maximum 5 fields)..
+
++ Response 200 (application/xml)
+
+
+## Execute 1-Tap payment [/ondemand_request.pl/{?action,sid}]
+Query parameter: *action=request*
+
+| Field      | Description    |Required? | Example Value |
+|------------|----------------|----------|---------------|
+| `action`     | The required action. In the second step this is **request**|Yes|request|
+| `sid`   |Session identifier returned in response to the prepare request|Yes|5e281d1376d92ba789ca7f0583e045d4|       
+
+
+| Field Name | Description | Example value |
+|------------|-------------|---------------|
+|amount      |Amount requested|10.50       |
+|currency     |3 letter code of the currency of the amount, according to ISO 4217| EUR |
+|id          |Transaction ID.                                                   | 500123 |
+|status      |Skrill 1-Tap payment status: 2 - processed, -2 - failed | 2 |
+|status_msg  |Text description of the status | processed |
+
+Note
+* If a request fails, you are not allowed to make more than two requests for a debit of a customer's account using a Skrill 1-Tap payment per customer per 24 hours.
+* The customer is notified by email for every Skrill 1-Tap payment request executed
+
+#### 1-Tap Execute Example
+
+##### Request
+```http
+GET
+
+Finish Example!
+
+```
+
+#### Response
+```xml
+
+Finish Example !
+
+```
+###  Execute 1-Tap Payment [GET]
+
++ Parameters
+      + action (required,string, `transfer`) - The required action. In the second step this is **request**
+      + sid:5e281d1376d92ba789ca7f0583e045d4 (required,number) - Session identifier returned in response to the prepare request
+      
++ Response 200 (application/xml)
+
+# Group Errors
+
+Errors when validating parameters:
+
+| Error | Resolution |
+|-------|------------|
+| INVALID_OR_MISSING_ACTION | Wrong action or no action is provided |
+| LOGIN_INVALID |  Email address and/or password were not provided |
+| INVALID_REC_PAYMENT_ID |  Invalid recurring payment ID is submitted by the merchant |
+| MISSING_EMAIL | Provide registered email address of merchant account |
+| MSSING_PASSWORD | MProvide correct API/MQI password |
+| MISSING_AMOUNT | Provide amount |
+| MISSING_CURRENCY | Provide currency |
+| MISSING_BNF_EMAIL | Provide email address of the beneficiary for send money request |
+| MISSING_SUBJECT | Provide the subject of the send money request |
+| MISSING_NOTE | Provide a note for the send money request |
+
+Errors during login:
+
+| Error | Resolution |
+|------|-----|
+| CANNOT_LOGIN | Email address and/or API/MQI password are incorrect |
+| PAYMENT_DENIED | Check in your account profile that the API is enabled and you
+are posting your requests from the IP address specified |
+
+Errors when validating payment details:
+
+| Error | Resolution |
+|------|-----|
+| INVALID_BNF_EMAIL | Check the format of the beneficiary email address |
+| INVALID_SUBJECT | Check parameter length submitted |
+| INVALID_NOTE | Check parameter length submitted |
+| INVALID_FRN_TRN_ID |  Check parameter length submitted |
+| INVALID_AMOUNT | Check amount format |
+| INVALID_CURRENCY | Check currency code |
+| EXECUTION_PENDING | If you resend a transfer request with the same session identifier before the 'transfer' request was processed, this error will be returned |
+| ALREADY_EXECUTED | If you have requested that the value for frn_trn_id must be unique for each transfer, this error will be returned when you try to submit the same value for more than one transfer |
+| BALANCE_NOT_ENOUGH | Sending amount exceeds account balance |
+| SINGLE_TRN_LIMIT_VIOLATED |  Maximum amount per transaction = EUR 10,000 |
+| DISALLOWED_RECIPIENT |  You are not permitted to send money to the recipient. E.g. Gaming merchants are not permitted to send or receive payments to/from US based customers |
+| CHECK_FOR_VERIFIED_EMAIL |  Your account email address needs to be verified |
+| LL_NO_PAYMENT | Your account is locked for security reasons. Please contact Skrill Merchant Services |
+
+Errors when making Skrill 1‐Tap payment requests:
+
+| Error | Resolution |
+|------|-----|
+| CUSTOMER_IS_LOCKED | The customer's account is locked for outgoing payments |
+| BALANCE_NOT_ENOUGH | The customer's account balance is insufficient |
+| RECIPIENT_LIMIT_EXCEEDED |  The customer's account limits are not sufficient |
+| CARD_FAILED | The customer's credit or debit card failed |
+| REQUEST_FAILED |  Generic response for transaction failing for any other reason |
+| ONDEMAND_CANCELLED | The customer has cancelled this Skrill 1‐Tap payment |
+| ONDEMAND_INVALID | The Skrill 1‐Tap payment requested does not exist |
+| MAX_REQ_REACHED |  Too many failed Skrill 1‐Tap payment requeststo the API. For security reasons, only two failed attempts per user per 24 hours are allowed |
+
+<a name="currencies">
+# Group Currencies
+
+| Code | Name |
+|------|-----|
+| EUR | Euro |
+| USD | U.S. Dollar |
+| GBP | British Pound |
+| HKD | Hong Kong Dollar |
+| SGD | Singapore Dollar |
+| JPY | Japanese Yen |
+| CAD | Canadian Dollar |
+| AUD | Australian Dollar |
+| CHF | Swiss Franc |
+| DKK | Danish Krone |
+| SEK | Swedish Krone |
+| NOK | Norwegian Krone |
+| ILS | Israeli Shekel |
+| MYR | Malaysian Ringgit |
+| NZD | New Zealand Dollar |
+| TRY | Turkish Lira |
+| AED | Utd. Arab Emir. Dirham |
+| MAD | Morocaan Dirham |
+| QAR | Qatari Rial |
+| SAR | Saudi Riyal |
+| TWD | Taiwan Dollar |
+| THB | Thailand Baht |
+| CZK | Czech Koruna |
+| HUF | Hungarian Forint |
+| BGN | Bulgarian Leva |
+| PLN | Polish Zloty |
+| ISK | Iceland Krona |
+| INR | Indian Rupee |
+| KRW | South Korean Won |
+| ZAR | South African Rand |
+| RON | Romanian Leu New |
+| HRK | Croatian Kuna |
+| JOD | Jordanian Dinar |
+| OMR | Omani Rial |
+| RSD | Serbian Dinar |
+| TND | Tunisian Dinar |
+| KWD | Kuwaiti Dinar |
+| BHD | Bahraini Dinar |
