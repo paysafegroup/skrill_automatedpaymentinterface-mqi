@@ -3,17 +3,20 @@ HOST: https://www.skrill.com/app
 
 # Automated Payment API and MQI (Draft)
 
+# Technical introduction
+This section provides a technical introduction to the NETELLER REST API. 
+
+## About the API
 The Automated Payment API (referred to as the API) and Merchant Query Interface (MQI) provide an alternative means of connecting to the Skrill Payment Gateway, and can be used to automate transaction requests such as refunds, payments and queries.
 
 API / MQI functions are accessed by sending HTTPS POST / GET requests to the relevant Skrill URL. All endpoints accept GET / POST.
 
-#### Note
+**Note**
 * POST is preferred for security reasons.
 * Do not mix GET and POST calls. Choose your preferred method and use that for all Skrill MQI / API calls.
 * POST parameters are encoded using Content-Type: application/x‐www‐form‐urlencoded  
 
 **MQI Functions**
-
 * Repost transaction status (only payment transactions? check?)
 * View transaction status (only payment transactions? check?)
 * View account history
@@ -36,7 +39,7 @@ By default, both the Automated Payments Interface and Merchant Query Interface a
   1. Setup an MQI / API password
 These steps are described in detail below.
 
-## Enable the MQI and / or API as follows:
+### Enable the MQI and / or API as follows:
  1. Log in to your Skrill account [here](https://account.skrill.com/login)
  1. Go to **Settings > Developer Settings**
  1. Check the **Enable service** checkbox next to the services you want to enable
@@ -49,7 +52,7 @@ Enter a list of IPs, a single IP address, or an IP range in the text fields in t
 corresponding sections (API or MQI, or both, as appropriate).
  1. To apply your changes, click **Save**.
 
-## Setup an API / MQI Password
+### Setup an API / MQI Password
 
 You must use a separate password from your merchant Wallet account for making API or MQI requests. This ensures that the password
 you use to access your Wallet account can be changed without affecting access to the API or MQI.
@@ -57,11 +60,11 @@ you use to access your Wallet account can be changed without affecting access to
 To enable a separate API/MQI password:
  1. In the **Settings > Developer Settings** area, check the **Enable separate API/MQI password** checkbox.
  1. Enter a new password and confirm it in the **Re-type password** box below.
->*The password must be at least 8 characters long and must contain at least one alphabetic and
+> *The password must be at least 8 characters long and must contain at least one alphabetic and
 one non‐alphabetic character*
  1. Click **Save**
  
-##Secret Word
+### Secret Word
 The secret word is used for the following tasks:
 * To construct the *msid* digital signature parameter. This parameter is sent to the *return_url* if the secure *return_url* option is enabled for your merchant account. This signature is used to verify the authenticity of the information sent to the *return_url* once payment is complete.
 * To create the digital signature parameters used to verify the authenticity of the payment status information that Skrill sends to the *status_url* .
@@ -89,7 +92,7 @@ The process consists of two steps:
 After each step Skrill returns a XML response that contains the result of the performed action. See the
 example in the [response section] (#prepare transfer response)
 
-## Prepare Transfer [/pay.pl/{?action,email,password,amount,currency,bnf_email,subject,note}]
+### Prepare Transfer [/pay.pl/{?action,email,password,amount,currency,bnf_email,subject,note}]
 
 | Field      | Description    |Required? | Example Value |
 |------------|----------------|----------|---------------|
@@ -103,7 +106,7 @@ example in the [response section] (#prepare transfer response)
 | `note`   | Comment to be included in the notification email.| Yes |Details are available on our website. |
 | `frn_trn_id`   | Your reference ID (must be unique if submitted).|No |A1234|
 
-### Prepare Response
+**Prepare Response**
 <a name="prepare transfer response">
 Skrill returns an XML response to your request, which contains a 'response' tag with one of the
 following elements:
@@ -136,7 +139,7 @@ GET https://www.skrill.com/app/pay.pl?action=prepare&email=merchant@host.com&pas
 GET https://www.skrill.com/app/pay.pl?action=prepare&email=merchant@host.com&password=6b4c1ba48880bcd3341dbaeb68b2647f&currency=EUR&bnf_email=beneficiary@domain.com&subject=some_subject&note=some_note&frn_trn_id=111
 ```
 
-###### Response
+##### Response
 ```xml
 <?xml version="1.0" encoding="UTF-8"?> <response> <error>
 <error_msg>MISSING_AMOUNT</error_msg> </error> </response>
@@ -382,7 +385,6 @@ This action allows you to cancel a Skrill 1‐Tap payment. The following additio
 | trn_id | The transaction_id value of the intial 1-Tap setup payment as returned to your status_url page | Yes | 500123 |
 
 For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
-
 
 + Parameters
       + action (required,string, `status_rec`)
