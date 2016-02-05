@@ -51,6 +51,8 @@ addresses are denied*. Access can be granted to:
 Enter a list of IPs, a single IP address, or an IP range in the text fields in the
 corresponding sections (API or MQI, or both, as appropriate).
  1. To apply your changes, click **Save**.
+ 
+ ![alt text](https://raw.githubusercontent.com/iand73/Images-for-API-MQI/master/Enable%20or%20Disable%20MQI%20-%20API%20and%20set%20valid%20IP%20ranges.png "Logo Title Text 1")
 
 ### Setup an API / MQI Password
 
@@ -63,6 +65,8 @@ To enable a separate API/MQI password:
 > *The password must be at least 8 characters long and must contain at least one alphabetic and
 one non‐alphabetic character*
  1. Click **Save**
+ 
+ ![alt text1](https://raw.githubusercontent.com/iand73/Images-for-API-MQI/master/Set%20MQI%20-%20API%20password.png "Logo Title Text 2")
  
 ### Secret Word
 The secret word is not used by the API / MQI but can also be configured at the same time. It is used for the following tasks:
@@ -78,6 +82,9 @@ To setup a secret word:
    * Special character are not permitted (e.g. @,%,$, etc.)
 If you insert any uppercase symbols, they will automatically be converted to lowercase
  1. To apply your changes, click **Save**
+ 
+ ![alt text3](https://raw.githubusercontent.com/iand73/Images-for-API-MQI/master/Set%20secret%20word%20and%20Website%20login%20restriction.png "Logo Title Text 3")
+
  
 ## Group API
 
@@ -436,11 +443,11 @@ This action allows you to extend the end date of a recurring payment. The follow
 For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
 
 + Parameters
-      + action (required,string, `status_rec`)
+      + action (required,string, `extend_rec`)
       + email:`sample.merchant@sun-fish.com` (required,string) - email address of the merchant account
       + password:fb0dc09bd0989fe975afd3e4ddabb926 (required,string) - The lowercase hex MD5 of your API / MQI password.
-      + trn_id:1676576180 (required,string) - Your transaction ID for the initial recurring payment.
-      + rec_end_date (required,string,`30-06-2000`) - The recurring payment end date in DD-MM-YYYY format
+      + trn_id:1683906688 (required,string) - Your transaction ID for the initial recurring payment.
+      + rec_end_date (required,string,`30-06-2019`) - The recurring payment end date in DD-MM-YYYY format
 
 + Response 200 (text/html)
 
@@ -699,7 +706,7 @@ parameters and converting the result to uppercase:
 
 #### Example code
 Concated fields in Ruby code:
-```Ruby
+```ruby
 fields = [merchant_id, mb_transaction_id, Digest::MD5.hexdigest(secret).upcase,
 mb_amount, mb_currency, status].join
 md5sig == Digest::MD5.hexdigest(fields).upcase
@@ -772,7 +779,7 @@ parameters are required:
 POST https://www.skrill.com/app/ondemand_request.pl
 Content-Type: application/x-www-form-urlencoded
 
-email=sample.merchant%40sun-fish.com&password=fb0dc09bd0989fe975afd3e4ddabb926&action=prepare&amount=1.23&currency=EUR&ondemand_note=ondemand+note&frn_trn_id=12341990&rec_payment_id=1668618647
+email=sample.merchant@sun-fish.com&password=fb0dc09bd0989fe975afd3e4ddabb926&action=prepare&amount=1.23&currency=EUR&ondemand_note=ondemand+note&frn_trn_id=12341990&rec_payment_id=1668618647
 ```
 
 #### Response
@@ -979,6 +986,7 @@ Errors when making Skrill 1‐Tap payment requests:
 
 <a name="currencies">
 # Group Currencies
+The following table lists the currency codes that Skrill accepts:
 
 | Code | Name |
 |------|-----|
