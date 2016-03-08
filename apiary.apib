@@ -52,7 +52,7 @@ Enter a list of IPs, a single IP address, or an IP range in the text fields in t
 corresponding sections (API or MQI, or both, as appropriate).
  1. To apply your changes, click **Save**.
  
- ![alt text](https://raw.githubusercontent.com/iand73/Images-for-API-MQI/master/Enable%20or%20Disable%20MQI%20-%20API%20and%20set%20valid%20IP%20ranges.png "Logo Title Text 1")
+ ![alt text](https://raw.githubusercontent.com/paysafegroup/skrill_automatedpaymentinterface-mqi/master/images/Enable%20or%20Disable%20MQI%20-%20API%20and%20set%20valid%20IP%20ranges.png "Logo Title Text 1")
 
 ### Setup an API / MQI Password
 
@@ -66,7 +66,7 @@ To enable a separate API/MQI password:
 one non‐alphabetic character*
  1. Click **Save**
  
- ![alt text1](https://raw.githubusercontent.com/iand73/Images-for-API-MQI/master/Set%20MQI%20-%20API%20password.png "Logo Title Text 2")
+ ![alt text1](https://raw.githubusercontent.com/paysafegroup/skrill_automatedpaymentinterface-mqi/master/images/Set%20MQI%20-%20API%20password.png "Logo Title Text 2")
  
 ### Secret Word
 The secret word is not used by the API / MQI but can also be configured at the same time. It is used for the following tasks:
@@ -83,7 +83,7 @@ To setup a secret word:
 If you insert any uppercase symbols, they will automatically be converted to lowercase
  1. To apply your changes, click **Save**
  
- ![alt text3](https://raw.githubusercontent.com/iand73/Images-for-API-MQI/master/Set%20secret%20word%20and%20Website%20login%20restriction.png "Logo Title Text 3")
+ ![alt text3](https://raw.githubusercontent.com/paysafegroup/skrill_automatedpaymentinterface-mqi/master/images/Set%20secret%20word%20and%20Website%20login%20restriction.png "Logo Title Text 3")
 
  
 ## Group API
@@ -101,17 +101,17 @@ example in the [response section] (#prepare transfer response)
 
 ### Prepare Transfer [GET /pay.pl/?action=prepare&email={email}&password={password}&amount={amount}&currency={currency}&bnf_email={bnf_email}&subject={subject}&note={note}&frn_trn_id={frn_trn_id}]
 
-| Field      | Description    |Required? | Example Value |
-|------------|----------------|----------|---------------|
-| `action`     | The required action in the first step, this is **prepare**|Yes|action-transfer|
-| `email`   | The email address of your merchant account|Yes|5e281d1376d92ba789ca7f0583e045d4| 
+| Field        | Description    |Required? | Example Value |
+|--------------|----------------|----------|---------------|
+| `action`     | The required action in the first step, this is **prepare**|Yes|prepare|
+| `email`      | The email address of your merchant account|Yes|5e281d1376d92ba789ca7f0583e045d4| 
 | `password`   | Lowercase MD5 of your API / MQI password|Yes|5e281d1376d92ba789ca7f0583e045d4|
-| `amount`   | Amount to transfer|Yes|10.95|
+| `amount`     | Amount to transfer|Yes|10.95|
 | `currency`   | Currency of the amount|Yes|EUR| 
-| `bnf_email`   | Recipient's email address|Yes|customer@host.com| 
-| `subject`   | Subject of the notification email | Yes | Your order is ready |
-| `note`   | Comment to be included in the notification email.| Yes |Details are available on our website. |
-| `frn_trn_id`   | Your reference ID (must be unique if submitted).|No |A1234|
+| `bnf_email`  | Recipient's email address|Yes|customer@host.com| 
+| `subject`    | Subject of the notification email | Yes | Your order is ready |
+| `note`       | Comment to be included in the notification email.| Yes |Details are available on our website. |
+| `frn_trn_id` | Your reference ID (must be unique if submitted).|No |A1234|
 
 **Prepare Response**
 <a name="prepare transfer response">
