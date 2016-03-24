@@ -27,7 +27,7 @@ API / MQI functions are accessed by sending HTTPS POST / GET requests to the rel
 * View the status of a 1-Tap payment
 
 **API Functions** 
-* Refund Quick Checkout / Wallet Checkout / 1-Tap payments.
+* Refund Quick Checkout / Wallet Checkout / 1-Tap payments (note Refunds are not supported for all merchant types).
 * Transfer Money to another Skrill Account (send money).
 * Taking subsequent 1-Tap payments (after the initial setup payment)
 
@@ -493,6 +493,9 @@ If a transaction with the given ID is found, the second line of the body of the 
 
 ## Group Refund
 You can use the Automated Payments Interface to make automated partial or full refunds to customers, up to the amount of the original payment.
+
+**NOTE** Refunds are not available for Gambling and Forex Merchants
+
 You must send your refund request using HTTPS GET / POST to the following URL:
 https://www.skrill.com/app/refund.pl
 
