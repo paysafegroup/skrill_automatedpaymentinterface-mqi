@@ -394,7 +394,7 @@ This action allows you to cancel a Skrill 1‐Tap payment. The following additio
 
 | Field Name | Description                                      | Required? | Example value                     |
 |------------|--------------------------------------------------|-----------|-----------------------------------|
-| trn_id | The transaction_id value of the intial 1-Tap setup payment as returned to your status_url page | Yes | 500123 |
+| trn_id | The transaction id you provided for the initial 1-Tap setup payment or (if no transaction id was provided) the transaction_id returned to your status_url page after this payment | Yes | 500123 |
 
 For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
 
@@ -416,7 +416,7 @@ This action allows you to cancel a recurring payment. The following additional p
 
 | Field Name | Description                                      | Required? | Example value                     |
 |------------|--------------------------------------------------|-----------|-----------------------------------|
-| trn_id | The transaction ID of the recurring payment (The transaction_id value of the intial setup recurring payment as returned to your status_url page) | Yes | 500123 |
+| trn_id | The transaction id you provided for the initial recurring setup payment or (if no transaction id was provided) the transaction_id returned to your status_url page after this payment | Yes | 500123 |
 
 For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
 
@@ -437,7 +437,7 @@ This action allows you to extend the end date of a recurring payment. The follow
 
 | Field Name | Description                                      | Required? | Example value                     |
 |------------|--------------------------------------------------|-----------|-----------------------------------|
-| trn_id | The transaction ID of the recurring payment (The transaction_id value of the intial setup recurring payment as returned to your status_url page) | Yes | 500123 |
+| trn_id | The transaction id you provided for the initial recurring setup payment or (if no transaction id was provided) the transaction_id returned to your status_url page after this payment | Yes | 500123 |
 | rec_end_date | The recurrent end date in DD-MM-YYYY format | Yes | 30-06-2013 |
 
 For a successful HTTP request, the HTTP response code 200 ‐ OK is returned.
@@ -460,7 +460,7 @@ This action allows you to check the status of a Skrill 1‐Tap payment. The foll
 
 | Field Name | Description                                      | Required? | Example value                     |
 |------------|--------------------------------------------------|-----------|-----------------------------------|
-| trn_id | The transaction_id value of the intial 1-Tap setup payment as returned to your status_url page | Yes | 500123 |
+| trn_id | The transaction id you provided for the initial 1-Tap setup payment or (if no transaction id was provided) the transaction_id returned to your status_url page after this paymenttrn | Yes | 500123 |
 
 If a transaction with the given ID is found, the second line of the body of the response will contain the following parameters:
 * Status: 0 - active, -1 - cancelled
